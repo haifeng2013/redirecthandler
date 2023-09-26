@@ -34,7 +34,7 @@ const myAppPort = "3004";   // my web app listens on this port for http requests
 const uatCookieName = "hoe-access-token"; // cookie set by ha-oidc-example (hoe) app
 // const appUrl = "d2un26jatk0l3k.cloudfront.net";
 // const appUrl = "demo-auth.routing.ext.here.com";
-const appUrl = "localhost:3004";
+const appUrl = "63.33.59.62:3004";
 
 // The original config object
 const origConfig = {
