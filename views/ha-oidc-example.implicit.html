@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+  ~ Copyright (C) 2019 HERE Technologies
+  -->
+
+<html>
+<head>
+    <script>
+        var parent = window.opener || window.parent || window.top;
+        var data = "{{ data }}";
+
+        // parse the parameters from the fragment anchor
+        var params = {};
+        var postBody = location.hash.substring(1);
+        var regex = /([^&=]+)=([^&]*)/g;
+        var m;
+        while (m = regex.exec(postBody)) {
+            params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+        }
+
+        // Use the access_token on the userinfo endpoint
+        var req = new XMLHttpRequest();
+        req.open('GET', "{{ oidcProvider }}" + "/openid/userinfo", true);
+        req.setRequestHeader("Authorization", "Bearer " + params["access_token"]);
+        req.setRequestHeader("Accept", "application/json");
+
+        req.onreadystatechange = function (e) {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status === 200) {
+                    // If the response is 200 OK save the body
+                    data += JSON.stringify(req.response);
+
+                }
+                else {
+                    // if the response is not success, generate an error message
+                    alert('Something other than 200 was returned: ' + req.status + " " + req.statusText + ", " + req.response );
+                    data += req.response;
+                }
+                parent.postMessage({ flow: "{{ flow }}", action: "{{ action }}", token: params["access_token"], data: data }, "{{ uri }}");
+                window.close();
+            }
+        };
+        req.send();
+
+        data += JSON.stringify(params);
+    </script>
+</head>
+<body>
+</body>
+</html>

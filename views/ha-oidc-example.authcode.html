@@ -1,0 +1,16 @@
+<!doctype html>
+<!--
+  ~ Copyright (C) 2018 HERE Technologies
+  -->
+
+<html>
+<head>
+    <script>
+        var parent = window.opener || window.parent || window.top;
+        parent.postMessage({ flow: "{{ flow }}", action: "{{ action }}", data: "{{ data }}", token: "{{ token }}" }, "{{ uri }}");
+        window.close();
+    </script>
+</head>
+<body>
+</body>
+</html>

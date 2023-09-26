@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (C) 2019 HERE Technologies
+  -->
+
+<html lang="en-gb">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>OIDC Node.js Reference Implementation</title>
+    <style>
+        .pre{
+            margin-top:0.5em;
+            margin-bottom:0.5em;
+            padding:5px;
+            width:100%;
+            word-wrap:break-word;
+            overflow:auto;
+            font-family:monospace,sans-serif;
+            font-size:13px;
+            background-color:#eff0f1;
+        }
+        table,td{
+            border:1px solid black;
+        }
+        td{
+            padding:5px;
+        }
+        .margin-top{
+            margin-top:5px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #48dad0;
+            color: #3a3d45;
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <h2>HERE Account OpenID Connect Node.js web app reference implementation Frontend</h2>
+    <div>
+        <span>click the "Authorize" button to sign in with OIDC</span>
+    </div>
+    <div>
+        <table id="oidcChoices">
+            <tr>
+                <th>Sign In Page Template:</th>
+                <th>OIDC Related Options:</th>
+                <th>Sign in/Sign up Related options:</th>
+                <th>Other Options:</th>
+            </tr>
+            <tr>
+                <td>
+                    <div>
+                        <select name="sign-in-template" id="sign-in-template">
+                            <option value="classic" selected="selected">classic</option>
+                            <option value="olp">olp</option>
+                            <option value="reality-lens-marketplace">reality-lens-marketplace</option>
+                            <option value="harmony-single">harmony-single</option>
+                            <option value="venue-portal">venue-portal</option>
+                            <option value="map-creator">map-creator</option>
+                        </select>
+                    </div>
+                    <div style="display:none">
+                        current window: <input type="checkbox" name="current-window" id="current-window" value="checked"/>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        force new login:<input type="checkbox" name="prompt-login" id="prompt-login" value="checked"/>
+                    </div>
+                    <div>
+                        force new consent:<input type="checkbox" name="prompt-consent" id="prompt-consent" value="checked"/>
+                    </div>
+                    <div>
+                        prompt none:<input type="checkbox" name="prompt-none" id="prompt-none" value="checked"/>
+                    </div>
+                    <div>
+                        grant flow:<br/>
+                        <input checked="checked" type="radio" name="response-type" value="code"/>Authcode(response-type=["code"])
+                        <br/>
+                        <input type="radio" name="response-type" value="token"/>Implicit(response-type=["token"])
+                        <br/>
+                        <input type="radio" name="response-type" value="id_token token"/>Implicit(response-type=["id_token","token"])
+                    </div>
+                    <div>
+                        max-age:<input type="text" size="25" id="max-age" value="1209600"/>
+                    </div>
+                    <div id="opts-scope" >
+                        <hr/>
+                        scope options:<br/>
+                        <label for="password">openid:</label>
+                        <input class="scope-options" type="checkbox" name="scope-options" id="openid" value="openid"
+                               checked="checked"/><br/>
+                        <label for="facebook">email:</label>
+                        <input class="scope-options" type="checkbox" name="scope-options" id="email" value="email"
+                               checked="checked"/><br/>
+                        <label for="arcgis">phone:</label>
+                        <input class="scope-options" type="checkbox" name="scope-options" id="phone" value="phone"
+                               checked="checked"/><br/>
+                        <label for="heread">profile:</label>
+                        <input class="scope-options" type="checkbox" name="scope-options" id="profile" value="profile"
+                               checked="checked"/><br/>
+                        <label for="heread">readwrite:ha:</label>
+                        <input class="scope-options" type="checkbox" name="scope-options" id="readwrite:ha" value="readwrite:ha"
+                               checked="checked"/><br/>
+                    </div>
+                </td>
+                <td>
+                    <div id="opts-sign-in">
+                        <label for="password">password:</label>
+                        <input class="sign-in-options" type="checkbox" name="sign-in-options" id="password" value="password" checked="checked"/><br/>
+                        <label for="facebook">facebook:</label>
+                        <input class="sign-in-options" type="checkbox" name="sign-in-options" id="facebook" value="facebook" checked="checked"/><br/>
+                        <label for="arcgis">arcgis:</label>
+                        <input class="sign-in-options" type="checkbox" name="sign-in-options" id="arcgis" value="arcgis" checked="checked"/><br/>
+                        <label for="heread">verimi:</label>
+                        <input class="sign-in-options" type="checkbox" name="sign-in-options" id="verimi" value="verimi" checked="checked"/><br/>
+                        <label for="heread">heread:</label>
+                        <input class="sign-in-options" type="checkbox" name="sign-in-options" id="heread" value="heread" checked="checked"/><br/>
+                    </div>
+                    <div>
+                        openSignUp:<input type="checkbox" name="open-sign-up" id="open-sign-up" value=""/>
+                    </div>
+                    <div>
+                        onlySignUp:<input type="checkbox" name="only-sign-up" id="only-sign-up" value=""/>
+                    </div>
+                    <div id="sign-in-or-up">
+                        noSignUp:<input type="checkbox" name="no-sign-up" id="no-sign-up" value=""/>
+                    </div>
+                    <div>
+                        selfCertifyAge:<input type="checkbox" name="self-certify-age" id="self-certify-age" value=""/>
+                    </div>
+                    <div>
+                        realmInput:<input type="checkbox" name="realm-input" id="realm-input" value="checked"/>
+                    </div>
+                    <div>
+                        realmAny:<input type="checkbox" name="realmAny" id="realm-any" value=""/>
+                    </div>
+                    <div>
+                        realm:<input type="text" size="25" id="realm"/>
+                    </div>
+                    <div class="margin-top">
+                        inviteToken:<input type="text" id="invite-token" value=""/>
+                    </div>
+                    <div class="margin-top">
+                        uatDuration:<input type="text" id="uat-duration" value="3600"/>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        MFARequired client_id:<br/>
+                        <input type="text" size="30" id="mfa-req-client-id" value=""/>
+                    </div>
+                    <div class="margin-top">
+                        MFARequired email_addr:<br/>
+                        <input type="email" size="30" id="mfa-req-email-addr" value="">
+                    </div>
+                    <div class="margin-top">
+                        prefilled email_addr:<br/>
+                        <input type="email" size="30" id="prefill-email-addr" value="">
+                    </div>
+                </td>
+                <td>
+                    <button id="oidc-sign-in-auth-code" onclick="oidcAuthorize();">oidc sdk<br/>Authorize</button>
+                    <br/>
+                    <button id="get-user-me" onclick="getUserMeFunc();">getUserMe<br/>(attempt<br/>token use)</button>
+                    <hr/>
+                    <button id="button-clear-cookies" onclick="signOutViaClearcookies();">Sign-out-via-clearcookies</button>
+                    <button id="button-sdk-signout" onclick="signOutViaSDK();">Sign-out-via-sdk</button>
+                </td>
+            </tr>
+            <tr>
+
+            </tr>
+        </table>
+    </div>
+    <div id="frame-and-console-holder">
+        <div id="console"></div>
+    </div>
+</div>
+<script src="{{ oidcProvider }}/js/sdk/oidcha.js"></script>
+<!-- Use the previous line for development; use the next line (minified) for production -->
+<!--<script src="https://account.here.com/js/sdk/oidcha.min.js"></script>-->
+<script>
+
+    "use strict";
+
+    var sdk;
+    var logElement = document.getElementById("console");
+    var uat; // user access token
+
+    var log = function (msg) {
+
+        var now = new Date();
+        logElement.innerHTML = "<div class='pre'>[" + now.toISOString() + "] " + msg + "</div>" + logElement.innerHTML;
+    };
+
+    var createOIDC = function () {
+
+        var responseType = document.querySelector('input[name="response-type"]:checked').value;
+        var login = document.getElementById('prompt-login').checked ? "login" : "";
+        var consent = document.getElementById('prompt-consent').checked ? "consent" : "";
+        var none = document.getElementById('prompt-none').checked ? "none" : "";
+        var config = {
+            clientId: "{{ clientId }}",
+            environment: "{{ oidcProvider }}",
+            prompt: (login + " " + consent + " " + none).trim(),
+            currentWindow: document.getElementById("current-window").checked,
+            responseType: responseType,
+            scope: "openid email phone profile readwrite:ha",
+            state: "some+opaque-state,passed through unchanged",
+            nonce: new Date().getTime(),
+            maxAge: document.getElementById('max-age').value,
+            noSignUp: document.getElementById('no-sign-up').checked,
+            realm: document.getElementById('realm').value,
+            realmInput: document.getElementById('realm-input').checked,
+            openSignUp: document.getElementById('open-sign-up').checked,
+            onlySignUp: document.getElementById('only-sign-up').checked,
+            selfCertifyAge:document.getElementById('self-certify-age').checked,
+            inviteToken: document.getElementById('invite-token').value,
+            uatDuration: document.getElementById('uat-duration').value,
+            realmAny: document.getElementById('realm-any').checked,
+            prefillEmailAddr: document.getElementById('prefill-email-addr').value,
+            signInTemplate: document.getElementById('sign-in-template').value || "",
+            callback: callback
+        };
+
+        // sign in options
+        var signInOptions = document.querySelectorAll('.sign-in-options:checked');
+        var arr = [];
+
+        for (var i=0, n=signInOptions.length; i < n; i++) {
+
+            if (signInOptions[i].checked) {
+                arr.push(signInOptions[i].value);
+            }
+        }
+        config.signInScreenConfig = arr.join(',');
+
+        // scope options
+        var scopeOptions = document.querySelectorAll('.scope-options:checked');
+        var scopeArr = [];
+
+        for (var i=0, n=scopeOptions.length; i < n; i++) {
+
+            if (scopeOptions[i].checked) {
+                scopeArr.push(scopeOptions[i].value);
+            }
+        }
+        config.scope = scopeArr.join(' ');
+
+        if (responseType === "code") {
+            config.redirectUri = "{{myAppPath}}"+"{{redirectUriAuthcode}}";
+        }
+        else {
+            config.redirectUri = "{{myAppPath}}"+"{{redirectUriImplicit}}";
+        }
+        //MFA Required options
+        var mfarq = document.getElementById('mfa-req-client-id').value;
+        if(mfarq && mfarq!==''){
+            config.mfaClientIds = mfarq.split(',');
+        }
+        config.mfaEmailAddr = document.getElementById('mfa-req-email-addr').value;
+
+        if (sdk) {
+            sdk.destruct();
+        }
+
+        log("reload: config = " + JSON.stringify(config));
+
+        sdk = here.Account.Openid(config);
+
+        return sdk;
+
+    };
+
+    var oidcAuthorize = function () {
+
+        sdk = createOIDC();
+        sdk.oidcAuthorize();
+    };
+
+    var getUserMeFunc = function () {
+        var goFuncUrl = "{{myAppPath}}" + "/getUserMe" +
+            "?targetToken="  + uat;
+
+        var options = {
+            verb     : "GET",
+            formData : {},
+            headers  : {}
+        };
+
+        ajaxRequest(goFuncUrl, options, function (result, data) {
+            console.log("getUserMe: xhr callback: status=" + result + ", response=" + data);
+            callback(null, JSON.parse(data));
+        });
+    };
+
+    var callback = function(err, data) {
+        var err = err;
+        var data = data;
+
+        if (!sdk.sdkVersion) {
+            // api change
+            // remove this after oidcha.js version 1.0.0 is in Prod
+            data = err;
+            err = null;
+        }
+
+        if (err) {
+            new Error (err);
+            return;
+        }
+
+        var tokenNote = "";
+        if (data.token) {
+            // save Implicit response access_token if provided
+            uat = data.token;
+            tokenNote = ": <span style=\"color:green\">received access_token saved </span>";
+        }
+
+        var str = data.flow + ' ' + data.action + tokenNote;
+        if (data.data) {
+            str += ':' + JSON.stringify(data.data);
+        }
+
+        str = str.replace(/,/gi, ',\r\n');
+
+        log(str);
+    };
+
+    var ajaxRequest = function(url, options, cb) {
+        var formData = options.formData || {},
+            verb = options.verb || "POST";
+
+        var xhr = new XMLHttpRequest();
+        xhr.open(verb, url , true);
+        // xhr.setRequestHeader("x-csrf-token", $window.here.csrf);
+        // xhr.setRequestHeader("x-realm", $window.here.realm);
+        if (options.headers) {
+            var hdr;
+            for (hdr in options.headers) {
+                xhr.setRequestHeader(hdr,options.headers[hdr]);
+            }
+        }
+        if(options.withCredentials){
+            xhr.withCredentials = true;
+        }
+        xhr.onreadystatechange = function() {//Call a function when the state changes.
+            if(xhr.readyState === XMLHttpRequest.DONE) {
+                cb(xhr.status, xhr.response);
+            }
+        };
+        xhr.send(formData);
+    };
+
+    var clearOidcCookie = function() {
+        var clearOidcCookieUrl = "{{myAppPath}}" + "/clearAccessToken";
+
+        fetch(clearOidcCookieUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then((response) =>  response.status)
+        .then((data) => {
+          log("clearOidcCookie returned "+ data);
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+    
+
+    var signOutViaSDK = function() {
+
+        var clearType = 'logout'; // Available values [keepTokenValid, logout, forceLogout]
+        sdk.oidcSignOut(clearType, uat, function(status){
+            log("clearCookies returned " + status);
+            clearOidcCookie();
+        });
+    }
+    /**
+     * Sign Out implementation via /clearCookies endpoint
+     * Check the Swagger documentation of this API here: 
+     * https://development-architecture.pages.gitlab.in.here.com/olp-apis/?urls.primaryName=aaa-oidc-v1#/OIDCFlow/ClearCookies
+     */
+    var signOutViaClearcookies = function () {
+
+        var goFuncUrl = "{{oidcProvider}}" + "/clearCookies";
+        var data = {"clearType": "logout"}; // Available values for "clearType" : [keepTokenValid, logout, forceLogout]
+
+        /**
+         * fetch Implementation. 
+         * Passing credentials: 'include' is important
+         * */
+        fetch(goFuncUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + uat
+          },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        })
+        .then((response) =>  response.status)
+        .then((data) => {
+          log("clearCookies returned "+ data);
+          // Clear OIDC token from cookies as well
+          clearOidcCookie();
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+
+        /**
+         * XMLHttpRequest Implementation
+         * Passing withCredentials: true is important
+         * */
+        // var options = {
+        //     verb     : "POST",
+        //     headers : {
+        //         "Authorization": "Bearer " + uat,
+        //         "Accept": "application/json"
+        //     },
+        //     formData: JSON.stringify(data),
+        //     withCredentials: true
+        // };
+
+        // ajaxRequest(goFuncUrl, options, function (result, data) {
+        //     console.log("clearCookies: xhr callback: status=" + result + ", response=" + data);
+        //     log("clearCookies returned " + result);
+        //    //  Clear OIDC token from cookies as well
+        //    clearOidcCookie();
+        // });
+    };
+
+    var oidchaVersion = function () {
+
+        sdk = createOIDC();
+        sdk.sdkVersion();
+    };
+
+    oidchaVersion();
+
+</script>
+</body>
+</html>
