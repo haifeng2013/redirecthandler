@@ -2,7 +2,7 @@
 
 const express = require('express');
 // const serverless = require('serverless-http');
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3004;
 const app = express();
 app.get('/', (req, res) => {
     const r = res.send('Namaste 🙏');
