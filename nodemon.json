@@ -1,0 +1,12 @@
+{
+  "ignore": [
+  ],
+  "verbose": false,
+  "watch": [
+    "app/*",
+    "views/*"
+  ],
+  "ext": "js json scss html",
+  "exec": "npm start"
+
+}
