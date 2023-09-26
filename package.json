@@ -1,0 +1,14 @@
+{
+  "name": "example",
+  "version": "1.2.1",
+  "description": "",
+  "engines": {
+    "node": ">=6.9.1 <18.0.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
