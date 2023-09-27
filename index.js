@@ -22,8 +22,8 @@ const oneHourInMsec = 60*60*1000;
 // const origConfig = {
 //     oidcProvider    : "https://st.p.account.here.com",  // OpenID Provider environment, see issuer property of https://confluence.in.here.com/display/HEREAccount/Open+ID+API#OpenIDAPI-ProviderConfigurationRequest
 //     clientId        : "HQFjiYTPjiLxBK56EiE1",           // clientId, and accessKeySecret are the credentials for my app obtained from SPOT
-//     accessKeyId     : "S-7DPxMP1cU7jZTw2X8a8A",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
-//     accessKeySecret : "U0l6Sf_kLgTqaYj6cEEa5jz3XPQ6PpajwzbvJ_wDe9UtKiv-v0R1YZr9dPbnt1TiiWkl4VgtorZYVn98B2mlvw",     // NEVER leak the secret to the user browser !!!
+//     accessKeyId     : "",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
+//     accessKeySecret : "",     // NEVER leak the secret to the user browser !!!
 //     tokenEndpointAuthMethod : "client_secret_jwt",      // HERE Account supports client_secret_jwt, client_secret_post and client_secret_basic methods defined in the Section 9 of OIDC specification.
 //     myAppPath       : "http://localhost:" + myAppPort,  // my web app is deployed at this url
 //     redirectUriAuthcode : "/authCodeRedirectHandler",   // If my app registered for responseType = code, this route registered with SPOT is where my app will receive the Authorization code
@@ -40,8 +40,8 @@ const appUrl = "63.33.59.62:3004";
 const origConfig = {
     oidcProvider    : "https://account.here.com",  // OpenID Provider environment, see issuer property of https://confluence.in.here.com/display/HEREAccount/Open+ID+API#OpenIDAPI-ProviderConfigurationRequest
     clientId        : "XpWGEOGS27GFs7tFDjFy",           // clientId, and accessKeySecret are the credentials for my app obtained from SPOT
-    accessKeyId     : "6wOy7yZRMfWuPtq56QNVdg",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
-    accessKeySecret : "WYe0sMWYAh-dQpPK0VLJ1NijqC7U0ho7cK2CGB8G3gReIAHpcnPMtrBiYVUbSkmPZ6tcqeHQzFe1qAnrK_ObbQ",     // NEVER leak the secret to the user browser !!!
+    accessKeyId     : "",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
+    accessKeySecret : "",     // NEVER leak the secret to the user browser !!!
     tokenEndpointAuthMethod : "client_secret_jwt",      // HERE Account supports client_secret_jwt, client_secret_post and client_secret_basic methods defined in the Section 9 of OIDC specification.
     myAppPath       : "http://" + appUrl,  // my web app is deployed at this url
     redirectUriAuthcode : "/authCodeRedirectHandler",   // If my app registered for responseType = code, this route registered with SPOT is where my app will receive the Authorization code
