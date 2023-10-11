@@ -1,31 +1,12 @@
 {
-  "name": "ha-oidc-example",
+  "name": "ha-oidc-handler",
   "version": "1.2.1",
-  "description": "HERE Account - Authentication via OpenID Connect - Reference Implementation NodeJS application",
-  "main": "ha-oidc-example.js",
-  "contributors": [
-    {
-      "name": "HERE Account team",
-      "email": "HERE_ACCOUNT_SUPPORT@here.com"
-    }
-  ],
-  "author": {
-    "name": "HERE Global B.V. and its affiliate(s)",
-    "url": "https://here.com"
-  },
-  "keywords": [
-    "HERE",
-    "HERE Technologies"
-  ],
+  "description": "",
   "engines": {
     "node": ">=6.9.1 <18.0.0"
   },
   "scripts": {
     "start": "node index.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "ssh://git@main.gitlab.in.here.com:3389/olp/aa/aa-front-end/ha-oidc-example.git"
   },
   "dependencies": {
     "async": "^3.2.4",
