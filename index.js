@@ -12,38 +12,26 @@ const jose = require("node-jose");
 const _ = require('underscore');
 
 const app = express();
+const crypto = require('crypto');
+const OAuth = require('oauth-1.0a');
+const axios = require('axios');
 
 const oneHourInMsec = 60*60*1000;
 
-// const myAppPort = "3002";   // my web app listens on this port for http requests
-// const uatCookieName = "hoe-access-token"; // cookie set by ha-oidc-example (hoe) app
-
-// // The original config object
-// const origConfig = {
-//     oidcProvider    : "https://st.p.account.here.com",  // OpenID Provider environment, see issuer property of https://confluence.in.here.com/display/HEREAccount/Open+ID+API#OpenIDAPI-ProviderConfigurationRequest
-//     clientId        : "HQFjiYTPjiLxBK56EiE1",           // clientId, and accessKeySecret are the credentials for my app obtained from SPOT
-//     accessKeyId     : "",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
-//     accessKeySecret : "",     // NEVER leak the secret to the user browser !!!
-//     tokenEndpointAuthMethod : "client_secret_jwt",      // HERE Account supports client_secret_jwt, client_secret_post and client_secret_basic methods defined in the Section 9 of OIDC specification.
-//     myAppPath       : "http://localhost:" + myAppPort,  // my web app is deployed at this url
-//     redirectUriAuthcode : "/authCodeRedirectHandler",   // If my app registered for responseType = code, this route registered with SPOT is where my app will receive the Authorization code
-//     redirectUriImplicit : "/implicitRedirectHandler"    // If my app registered for responseType = token or idToken, this route registered with SPOT is where my app will receive the Implicit grant flow response
-// };
-
-const myAppPort = "3004";   // my web app listens on this port for http requests
+const myAppPort = "3080";   // my web app listens on this port for http requests
 const uatCookieName = "hoe-access-token"; // cookie set by ha-oidc-example (hoe) app
-// const appUrl = "d2un26jatk0l3k.cloudfront.net";
-// const appUrl = "demo-auth.routing.ext.here.com";
-const appUrl = "63.33.59.62:3004";
+// const appUrl = "ec2-3-252-104-92.eu-west-1.compute.amazonaws.com:80";
+const appUrl = "demo-olp.routing.ext.here.com";
 
 // The original config object
 const origConfig = {
+    authEndpoint    : "https://account.api.here.com",
     oidcProvider    : "https://account.here.com",  // OpenID Provider environment, see issuer property of https://confluence.in.here.com/display/HEREAccount/Open+ID+API#OpenIDAPI-ProviderConfigurationRequest
-    clientId        : "XpWGEOGS27GFs7tFDjFy",           // clientId, and accessKeySecret are the credentials for my app obtained from SPOT
-    accessKeyId     : "",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
-    accessKeySecret : "",     // NEVER leak the secret to the user browser !!!
+    clientId        : "QTmoWsSsUzsw3I0MliO5",           // clientId, and accessKeySecret are the credentials for my app obtained from SPOT
+    // accessKeySecret : "",     // NEVER leak the secret to the user browser !!!
+    // accessKeyId     : "FFQszEtw-e0ImKYUAG3tig",         // access.key.id from credentials-*.properties file, needed e.g. for client signing
     tokenEndpointAuthMethod : "client_secret_jwt",      // HERE Account supports client_secret_jwt, client_secret_post and client_secret_basic methods defined in the Section 9 of OIDC specification.
-    myAppPath       : "http://" + appUrl,  // my web app is deployed at this url
+    myAppPath       : "https://" + appUrl,  // my web app is deployed at this url
     redirectUriAuthcode : "/authCodeRedirectHandler",   // If my app registered for responseType = code, this route registered with SPOT is where my app will receive the Authorization code
     redirectUriImplicit : "/implicitRedirectHandler"    // If my app registered for responseType = token or idToken, this route registered with SPOT is where my app will receive the Implicit grant flow response
 };
@@ -178,6 +166,8 @@ var handleRedirectUriAuthcode = function(req, res) {
                 if (response && response.statusCode && response.statusCode === 200) {
                     console.log("handleRedirectUriAuthcode authCodeExchangeRespHandler() \x1b[32m success: " + objToStr(JSON.parse(authCodeExchangeResponseBody)) + "\x1b[0m");
 
+                    data.queryState = req.query.state;
+
                     var userAccessToken = JSON.parse(authCodeExchangeResponseBody).access_token;
 
                     // 1. put token in data object for current operation response
@@ -278,6 +268,7 @@ var handleRedirectUriAuthcode = function(req, res) {
                     console.log("\x1b[33m waterfall error: " + err + "\x1b[0m");
                 }
                 console.log("\x1b[34m ==================== \x1b[0m\n");
+                
                 sendAuthcodeResponse(data, res);
             }
         );
@@ -320,6 +311,119 @@ var handleClearAccessToken = function(req, res) {
 
     res.status(statusCode).send(options);
 };
+
+var handleAccessToken = function(req, res) {
+    var action = "completed";
+    var statusCode = 200;
+//    console.log("handleAccessToken invoked", req.headers);
+
+    var options = {
+        action : action,
+        flow   : "handleAccessToken",
+        uri    : config.myAppPath,
+        data   : {}
+    };
+
+    if (req.headers.cookie) {
+        options.data = {
+            accessToken: getCookie('hoe-access-token', req.headers.cookie)
+        }
+    }
+
+    res.status(statusCode).send(options.data)
+}
+
+var handleScopedTokenExchange = async function(req, res) {
+    const { headers, body } = req;
+    const { authorization } = headers;
+    const { scope } = body;
+    // console.log(scope, authorization)
+    const data = {
+        device_id: "7f911ae9-3f11-4ad3-8bb0-b3436cc0f3bf",
+        expires_in: 3600,
+        grant_type: "client_credentials",
+        scope: "hrn:here:authorization::olp-here:project/imlexample"
+    };
+
+    const token = {
+        key: origConfig.accessKeyId, //Access key
+        secret: origConfig.accessKeySecret, //Secret key
+    };
+    const oauth = OAuth({
+        consumer: token,
+        signature_method: 'HMAC-SHA256',
+        hash_function(base_string, key) {
+            return crypto
+            .createHmac('sha256', key)
+            .update(base_string)
+            .digest('base64')
+        }
+    });
+      
+    const request_data = {
+        url: config.authEndpoint+"/oauth2/token",
+        method: 'POST',
+        data: data,
+    };
+    console.log(oauth.toHeader(oauth.authorize(request_data, token)))
+    axios({
+        url: request_data.url,
+        method: request_data.method,
+        headers: {
+          'Authorization': oauth.toHeader(oauth.authorize(request_data, token)).Authorization,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        data: `grant_type=client_credentials&scope=${scope}`,
+    }).then(response => {
+        console.log(response)
+        return response.data;
+    }).catch(error => { 
+        console.log('error', error)
+        // return error.response;
+    });
+    //const accessToken = res.data.access_token || res.data.accessToken;
+
+    return;
+    const configHeader = {
+        "Content-Type": "application/json",
+        Authorization: authorization,
+    };
+
+    const payload = {
+        device_id: "7f911ae9-3f11-4ad3-8bb0-b3436cc0f3bf",
+        expires_in: 3600,
+        grant_type: "client_credentials",
+        scope: "hrn:here:authorization::olp-here:project/imlexample"
+    }
+
+    axios.post(config.oidcProvider+"/oauth2/token", JSON.stringify({ payload }), configHeader).then(response => {
+        console.log(response)
+        return response.data;
+    }).catch(error => { 
+        console.log('error')
+        return error.response;
+    });
+    
+      return;
+    var action = "completed";
+    var statusCode = 200;
+//    console.log("handleAccessToken invoked", req.headers);
+
+    var options = {
+        action : action,
+        flow   : "handleAccessToken",
+        uri    : config.myAppPath,
+        data   : {}
+    };
+
+    if (req.headers.cookie) {
+        options.data = {
+            accessToken: getCookie('hoe-access-token', req.headers.cookie)
+        }
+    }
+
+    res.status(statusCode).send(options.data)
+}
 
 // Handler for getUserMe request
 var handleGetUserMe = function(req, res) {
@@ -398,7 +502,9 @@ var sendAuthcodeResponse = function(data, res) {
         options.action = "completed";
         options.token = data.userAccessToken;
         options.data = JSON.stringify(data);
+        options.redirect = data.queryState.redirect;
     }
+    res.setHeader('X', '56788')
 
     res.render("ha-oidc-example.authcode.html", options);
 };
@@ -414,6 +520,11 @@ var envMap = {
     "http://localhost:3000"                 : { ha: "https://stg.account.api.here.com" }
 };
 
+function getCookie(name, c) {
+    const value = `; ${c}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
 
 function getHAbaseUri() {
     var provider = config.oidcProvider.replace("cn-northwest-1.","");   // strip out Rt53 bug artifact
@@ -483,6 +594,7 @@ function objToStr(obj, indent) {
 // Server and routes
 app.engine("html", swig.renderFile);
 app.use(cookieParser());
+app.use(express.json());
 
 app.get("/",                        loadRootPage);
 
@@ -493,6 +605,10 @@ app.get(config.redirectUriAuthcode, handleRedirectUriAuthcode);
 app.get("/clearAccessToken",        handleClearAccessToken);
 
 app.get("/getUserMe",               handleGetUserMe);
+
+app.get("/accessToken",             handleAccessToken);
+
+app.post("/scopedTokenExchange",    handleScopedTokenExchange);
 
 app.listen(myAppPort, function() {
     console.log("\x1b[34mHERE Account OpenID Connect Relying Party Node.js Reference Implementation Backend\x1b[0m" +
@@ -508,4 +624,3 @@ app.listen(myAppPort, function() {
         "Connected to OIDC Provider: \x1b[36m" + config.oidcProvider + "\x1b[0m"
     );
 });
-
