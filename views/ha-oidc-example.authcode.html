@@ -2,15 +2,34 @@
 <!--
   ~ Copyright (C) 2018 HERE Technologies
   -->
-
 <html>
 <head>
     <script>
-        var parent = window.opener || window.parent || window.top;
-        parent.postMessage({ flow: "{{ flow }}", action: "{{ action }}", data: "{{ data }}", token: "{{ token }}" }, "{{ uri }}");
-        window.close();
+        // var parent = window.opener || window.parent || window.top;
+        // parent.postMessage({ flow: "{{ flow }}", action: "{{ action }}", data: "{{ data }}", token: "{{ token }}", redirect: "{{ redirect }}" }, "{{ uri }}");
+        //    alert("");
+        // window.location = "";
+        function redirect() {
+          console.log({ flow: "{{ flow }}", action: "{{ action }}", data: "{{ data }}", token: "{{ token }}", redirect: "{{ redirect }}" }, "{{ uri }}");
+
+            setTimeout(function(){
+              if ("{{ redirect }}" == "") {
+                window.location = "{{ uri }}";
+              } else {
+                // var uri = data.substring(data.indexOf("\&quot;redirect\&quot;:\&quot;"), data.indexOf("&quot;}&quot;")).substr(27);
+                //console.log(a.replaceAll('%3A',':').replaceAll('%2F','/').replaceAll('%3D','=').replaceAll('%23','#'));
+                // window.location = uri.replaceAll('%3A',':').replaceAll('%2F','/').replaceAll('%3D','=').replaceAll('%23','#');
+                var uri = "{{ redirect }}"
+                window.location = uri.replaceAll('%3A',':').replaceAll('%2F','/').replaceAll('%3D','=').replaceAll('%23','#');
+              }
+              window.close();
+            }, 100);
+          
+        }
+        //document.write("You will be redirected to the main page in 10 seconds.");
+        // window.close();
     </script>
 </head>
-<body>
+<body onload="redirect()">
 </body>
 </html>
